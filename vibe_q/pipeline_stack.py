@@ -1,10 +1,17 @@
 from aws_cdk import (
     Stack,
     Stage,
-    pipelines,
 )
+import aws_cdk as cdk
 from constructs import Construct
+from aws_cdk.pipelines import CodePipeline, CodePipelineSource, ShellStep, ManualApprovalStep
 from .vibe_q_stack import VibeQStack
+
+class AppStage(Stage):
+    def __init__(self, scope: Construct, construct_id: str, env_name: str, **kwargs):
+        super().__init__(scope, construct_id, **kwargs)
+        
+        VibeQStack(self, f"VibeQStack", env_name=env_name)
 
 class PipelineStack(Stack):
 
@@ -12,11 +19,12 @@ class PipelineStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         # Create the pipeline
-        pipeline = pipelines.CodePipeline(
+        pipeline = CodePipeline(
             self, "Pipeline",
-            synth=pipelines.ShellStep(
+            pipeline_name="VibeQCICDPipeline",
+            synth=ShellStep(
                 "Synth",
-                input=pipelines.CodePipelineSource.connection(
+                input=CodePipelineSource.connection(
                     "datanooblol/vibe-q",
                     "main",
                     connection_arn=self.node.try_get_context("codestar-connection-arn")
@@ -31,22 +39,19 @@ class PipelineStack(Stack):
 
         # Add deployment stages
         dev_stage = pipeline.add_stage(
-            AppStage(self, "Dev", env_name="dev")
+            AppStage(self, "Dev", env_name="dev", 
+                    env=cdk.Environment(region="ap-southeast-1"))
         )
         
         test_stage = pipeline.add_stage(
-            AppStage(self, "Test", env_name="test")
+            AppStage(self, "Test", env_name="test",
+                    env=cdk.Environment(region="ap-southeast-1"))
         )
         
         prod_stage = pipeline.add_stage(
-            AppStage(self, "Prod", env_name="prod"),
+            AppStage(self, "Prod", env_name="prod",
+                    env=cdk.Environment(region="ap-southeast-1")),
             pre=[
-                pipelines.ManualApprovalStep("PromoteToProd")
+                ManualApprovalStep("PromoteToProd")
             ]
         )
-
-class AppStage(Stage):
-    def __init__(self, scope: Construct, construct_id: str, env_name: str, **kwargs):
-        super().__init__(scope, construct_id, **kwargs)
-        
-        VibeQStack(self, f"VibeQStack-{env_name.title()}", env_name=env_name)
