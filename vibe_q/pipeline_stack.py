@@ -18,9 +18,9 @@ class PipelineStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Create the pipeline
+        # Create the pipeline - this will create the actual CodePipeline in AWS
         pipeline = CodePipeline(
-            self, "Pipeline",
+            self, "VibeQPipeline",
             pipeline_name="VibeQCICDPipeline",
             synth=ShellStep(
                 "Synth",
@@ -32,7 +32,7 @@ class PipelineStack(Stack):
                 commands=[
                     "npm install -g aws-cdk",
                     "python -m pip install -r requirements.txt",
-                    "cdk synth"
+                    "cdk synth --app 'python app.py'"
                 ]
             )
         )
@@ -55,3 +55,6 @@ class PipelineStack(Stack):
                 ManualApprovalStep("PromoteToProd")
             ]
         )
+        
+        # Output the pipeline name
+        cdk.CfnOutput(self, "PipelineName", value=pipeline.pipeline.pipeline_name)

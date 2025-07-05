@@ -4,6 +4,7 @@ from vibe_q.pipeline_stack import PipelineStack
 
 app = cdk.App()
 
+# Only create the pipeline stack - it will create the app stacks
 PipelineStack(
     app, 
     "VibeQPipelineStack",
