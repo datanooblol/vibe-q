@@ -63,12 +63,12 @@ class PipelineStack(Stack):
                 codepipeline.StageProps(
                     stage_name="Source",
                     actions=[
-                        codepipeline_actions.GitHubSourceAction(
+                        codepipeline_actions.CodeStarConnectionsSourceAction(
                             action_name="GitHub_Source",
-                            owner="YOUR_GITHUB_USERNAME",
-                            repo="YOUR_REPO_NAME",
+                            owner=self.node.try_get_context("github-owner"),
+                            repo="vibe-q",
                             branch="main",
-                            oauth_token=self.node.try_get_context("github-token"),
+                            connection_arn=self.node.try_get_context("codestar-connection-arn"),
                             output=source_output
                         )
                     ]
